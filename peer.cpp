@@ -40,7 +40,7 @@ Peer :: Peer(int guid , list<int> peer_list)
     int limit = log2(n) ; 
     for(int i = 0 ; i<=limit ; i++)
     {
-        long long int peer_neighbour = ((long long int)pow(2,i) + this->guid)%n ;
+        long long int peer_neighbour = ((long long int)pow(2,i) + this->guid)%(n+1) ;
         this->Routing_table.push_back(peer_neighbour) ;
     }
 
@@ -52,6 +52,12 @@ int Peer ::get_guid()
 {
     return this->guid ; 
 } 
+
+
+map<int, string> Peer ::  get_file_stored()
+{
+        return file_stored ; 
+}
 
 
 void Peer :: get_routing_table()
@@ -78,9 +84,18 @@ string Peer :: get_file(int file_id)
 
 } 
 
+
 void Peer ::add_file(int file_id , string content)
 {
     file_stored[file_id] = content ; 
+}
+
+void Peer :: remove_file(int file_id)
+{
+    if(file_stored[file_id] != "")
+    {
+        file_stored.erase(file_id) ; 
+    }
 }
 
 void Peer :: rewrite_routing(list<int>peer_list) 
