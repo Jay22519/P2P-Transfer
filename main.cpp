@@ -6,20 +6,22 @@ using namespace std ;
 int main()
 {
     list<int> peer_list ;
-    for(int i = 0 ; i<15 ; i++)
+    for(int i = 0 ; i<16 ; i++)
     {
         peer_list.push_back(i) ; 
     }
 
 
-    Peer p[15] ;
+    Peer p[16] ;
 
 
-    for(int i = 0 ; i<15 ; i++)
+    for(int i = 0 ; i<16 ; i++)
     {
         p[i] = Peer(i , peer_list) ; 
-        p[i].get_routing_table() ;
+        //p[i].get_routing_table() ;
     } 
+
+    //p[9].get_routing_table() ;
 
     p[0].add_file(1 , "Jay") ;
     p[1].add_file(2 , "Puri") ; 
@@ -28,7 +30,8 @@ int main()
     p[4].add_file(5 , "Hi !!") ;
 
      
-    cout<<p[3].request_peer(0,1,p) ; 
+    cout<<p[0].request_peer(3,4,p , 16)<<"\n" ; 
+    cout<<p[3].request_peer(0,1,p , 16)<<"\n" ;
 
 
 

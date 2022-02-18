@@ -2,6 +2,30 @@
 #include<bits/stdc++.h>
 using namespace std ; 
 
+void block(long int x , list<int> *answer)
+{
+    vector<long int> v;
+    //cout << "Blocks for " << x << " : ";
+    while (x > 0)
+    {
+        v.push_back(x % 2);
+        x = x / 2;
+    }
+
+    for (int i = 0; i < v.size(); i++)
+    {
+        if (v[i] == 1)
+        {
+           
+            answer->push_back(i) ; 
+            // if (i != v.size() - 1)
+            //     cout << ", ";
+        }
+    }
+    cout << endl;
+}
+
+
 Peer :: Peer()
 {
     
@@ -17,7 +41,7 @@ Peer :: Peer(int guid , list<int> peer_list)
     for(int i = 0 ; i<=limit ; i++)
     {
         long long int peer_neighbour = ((long long int)pow(2,i) + this->guid)%n ;
-        this->Routing_table.insert(peer_neighbour) ;
+        this->Routing_table.push_back(peer_neighbour) ;
     }
 
      
@@ -65,7 +89,7 @@ void Peer :: rewrite_routing(list<int>peer_list)
     int limit = log2(n) ; 
     for(int i = 0 ; i<=limit ; i++)
     {
-        this->Routing_table.insert(((long long int)pow(2,i) + this->guid)%n) ;
+        this->Routing_table.push_back(((long long int)pow(2,i) + this->guid)%n) ;
     }
 
 }
@@ -75,67 +99,135 @@ int Peer :: ask_directory(int file_id)
     return 1 ; 
 }
 
-string Peer:: request_peer(int peer_guid , int file_id , Peer peer[])
+/**
+ *          Request_user is the function invoked when any peer wants to look for file_id in peer with guid = peer_guid . 
+ *          3 cases comes here -> 1) guid < peer_guid 
+ *                                2) guid == peer_guid 
+ *                                3) guid > peer_guid 
+ * 
+ *                          Now in case 1 , we traverse the routing_table of guid and break when *i > peer_guid and calling pass_message_from_peer
+ *                          function for *prev peer
+ * 
+ *                          For case 2 , simply call send_to_peer function 
+ *              
+ *                          For case 3 , add n (Total number of peers in network) to peer_guid and traverse in routing table of guid , till -> 
+ *                                      a) if *i > 
+ */
+string Peer :: request_peer(int peer_guid , int file_id , Peer peer[] , int n )
 {
-    /**
-      Extra layer of encrypting file_id   
-     */
-
-    if(peer_guid == guid)
+    if(peer_guid > guid)
     {
-        return this->send_to_peer(this->guid , file_id) ; 
-    }
+        long long int diff =  fabs(guid - peer_guid) ; 
+        list<int> answer ; 
+        block(diff , &answer) ; 
 
+        for(auto i = answer.begin() ; i != answer.end() ; i++)
+        {
+            *i = (*i) + 1 ; 
+        }
 
-    set<long long int> :: iterator i  ; 
-    set<long long int> :: iterator prev  ;
-    for(i = Routing_table.begin() ; i != Routing_table.end() ; i++)
-    {
-        
-        if(*i > peer_guid)
+        long int iter = answer.front() ; 
+        long int count =  1 ;  
+        list<long long int> :: iterator it = Routing_table.begin() ; 
+        while(count < iter)
         {
-            return peer[*prev].pass_message_from_peer(this->guid , peer_guid , file_id , peer) ; 
+            it++ ;
+            count ++ ;
         }
-        else if(*i == peer_guid)
-        {
-            peer[peer_guid].send_to_peer(this->guid , file_id) ; 
-        }
-        else
-        {
-            prev = i ; 
+        answer.pop_front() ; 
+        if(answer.empty())
+        {     
+            return peer[*it].send_to_peer(guid , file_id) ; 
         }
         
+        return peer[*it].pass_message_from_peer(guid , peer_guid , file_id , peer , answer) ; 
+        
     }
-    
-    
+    else if(peer_guid == guid)
+    {
+        return this->send_to_peer(guid , file_id) ; 
+    }
+    else // peer_guid < guid
+    {
+            long long int diff =  n - fabs(guid - peer_guid) ; 
+            list<int> answer ; 
+            block(diff , &answer) ; 
+
+            for(auto i = answer.begin() ; i != answer.end() ; i++)
+            {
+                *i = (*i) + 1 ; 
+            }
+            long int iter = answer.front() ; 
+            long int count =  1 ;  
+            list<long long int> :: iterator it = Routing_table.begin() ; 
+            while(count < iter)
+            {
+                it++ ;
+                count ++ ;
+            }
+            answer.pop_front() ; 
+            if(answer.empty())
+            {
+                
+                return peer[*it].send_to_peer(guid , file_id) ; 
+            }
+            
+            return peer[*it].pass_message_from_peer(guid , peer_guid , file_id , peer , answer) ; 
+            
 
 
+
+
+    }
 }
 
-string Peer ::pass_message_from_peer(int src_guid , int dst_guid , int file_id , Peer peer[])
+// Nearly same logic as request_peer 
+string Peer ::  pass_message_from_peer(int src_guid , int dst_guid , int file_id , Peer peer[] , list<int> answer)
 {
-
-    set<long long int> :: iterator i  ; 
-    set<long long int> :: iterator prev  ;
-    for(i = Routing_table.begin() ; i != Routing_table.end() ; i++)
-    {
-
-        if(*i > dst_guid)
-        {
-            return peer[*prev].pass_message_from_peer(this->guid , dst_guid , file_id , peer) ; 
+        if(dst_guid > guid)
+        { 
+            long int iter = answer.front() ; 
+            long int count =  1 ;  
+            list<long long int> :: iterator it = Routing_table.begin() ; 
+            while(count < iter)
+            {
+                it++ ;
+                count ++ ;
+            }
+            answer.pop_front() ; 
+            if(answer.empty())
+            {
+                
+                return peer[*it].send_to_peer(guid , file_id) ; 
+            }
+            
+            return peer[*it].pass_message_from_peer(guid , dst_guid , file_id , peer , answer) ; 
+            
         }
-        else if(*i == dst_guid)
+        else if(dst_guid == guid)
         {
-            return peer[dst_guid].send_to_peer(src_guid , file_id) ; 
+                return this->send_to_peer(src_guid , file_id) ; 
         }
-        else
+        else  // dst_guid < guid
         {
-            prev = i ; 
+            
+            long int iter = answer.front() ; 
+            long int count =  1 ;  
+            list<long long int> :: iterator it = Routing_table.begin() ; 
+            while(count < iter)
+            {
+                it++ ;
+                count ++ ;
+            }
+            answer.pop_front() ; 
+            if(answer.empty())
+            {
+                
+                return peer[*it].send_to_peer(guid , file_id) ; 
+            }
+            
+            return peer[*it].pass_message_from_peer(guid , dst_guid , file_id , peer , answer) ; 
         }
-        
-    }
-    
-
 }
 
 string Peer :: send_to_peer(int src_guid , int file_id)
