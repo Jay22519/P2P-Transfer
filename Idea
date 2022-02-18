@@ -1,0 +1,88 @@
+                                        CREATE A P2P SYSTEM 
+
+
+            THINGS NEEDED -> 
+                            1) A Class for implmenting Peers 
+                            2) A basic outline of class is -> 
+                                        class Peer 
+                                        {
+                                            int GUID ; 
+                                            list<string>file_stored ; 
+                                            list<int> Routing_table ; 
+                                            int connected ; ## This will check if this peer is connected to system or not 
+                                                    0 = for not connected , 1 for connected and -1 for crashed
+                                            public :
+                                                    int getGUID() ;
+                                                    int getfile(int file_id) ; ## Return a specific file 
+                                                    int getmessage_from_peer(int guid , int type) ;
+                                                            ## This function will recieve a messgage from a peer .
+                                                            ## getmessage will invoke rewrite routing table if messgae received is that is a new 
+                                                               peer is created or a given new peer is destroyed
+
+
+
+                                                    void rewrite_routing(int guid) ;
+                                                            ## Will re write routing table for this peer 
+
+                                                    int call_peer(int guid , int file_id) ;
+                                                            ## This function will request peer with id = guid for a giveen file
+                                                            ## Will reach to guid with the help of routing table
+                                                            ## Return success = 1 or failure = 0 
+
+                                                    int pass_message_from_peer(int src_guid , int dst_guid , int file_id) 
+                                                            ## call_peer will ask his neighbouring peer to pass the message of asking for 
+                                                                file_id by invoking this function 
+
+                                                            Example -> If 0 needs to ask peer 13 for file_id = 999 , so functioo invoking order will be ->
+                                                                    call_peer(13 , 999) in peer 0 . Since 0 is not connected to 13 , 
+                                                                            so it will peer 8 to tranfer this message  
+                                                                    pass_message_from_peer(0 , 13 , 999) in peer 8 . Now since 8 is not connected to 13
+                                                                            so it will pass this to peer 12 
+                                                                    Now pass_message_from_peer(0,13,999) will be called for peer 12 but since 12 and 13
+                                                                    are connected , so this pass will invoke request_from_peer(0,999) 
+
+
+                                                    int request_from_perr(int src_guid , int file_id)
+
+                                                    
+
+                                        }
+
+
+                                3) File_id will be encrypted in call_peer function and then decrypted in request_from_peer function 
+                                        (Encryption style needs to be decided)
+
+                                
+                                4) A class Directory will be implemented . This will store all the peers where a given file_id is present and 
+                                        will return the closest peer based on Kamdelia distance 
+
+                                        class Directory
+                                        {
+                                            list<int> file_directory* ; 
+                                            list<int> GUID ;  // Will contain list of all Peers 
+                                             
+                                            
+                                            public :
+                                                Directory() ; 
+
+                                                add_new_peer() ; //Adding a new peer 
+                                                add_new_file(int file_id , int guid) ; // Will add new_file to system and store it in given 
+                                                                                                                                guid peer ;
+                                                add_file_to_peer( int file_id , int guid) ; //This means that the given file will be added to peer  
+                                                                                                                            with guid = guid 
+                                                                                                                    
+                                                remove_file_to_peer(int file_id , int guid) ; //Opposite of add_file_to_peer 
+                                                                                            Corner case -> If after removing file from guid , 
+                                                                                            if  file_directory[file_id] becomes empty , so delete that 
+                                                                                            file from the system 
+
+
+                                                check_system()
+                                                    ## Very important function . Regularly it will check the status of peer . 
+                                                        If anything irregular happens , so it will invoke getmessage_from_peer() for all peers connected to
+                                                            this peer  
+
+
+                                        }
+
+                                5) Test the project using GoogleTesting (C++)
